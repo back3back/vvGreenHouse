@@ -255,7 +255,10 @@ public class EnvironmentFragment extends Fragment {
                 MainActivity.postAlertNotification(ctx, title, content);
             }
             // 主线程更新UI
-            mainHandler.post(() -> updateCardUI(data));
+            mainHandler.post(() -> {
+                if (!isAdded()) return;
+                updateCardUI(data);
+            });
         }, 0, REFRESH_INTERVAL_SEC, TimeUnit.SECONDS);
     }
 

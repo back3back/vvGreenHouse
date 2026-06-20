@@ -107,7 +107,7 @@ public class SettingsFragment extends Fragment {
         // —— 大棚信息列表 ——
         layoutGhList = view.findViewById(R.id.layout_gh_list);
         loadGhEditRows();
-        // 保存按钮靠 layout 自带
+        view.findViewById(R.id.btn_save_gh).setOnClickListener(v -> saveGhEdits());
 
         // —— 数据备份 ——
         view.findViewById(R.id.btn_backup_db).setOnClickListener(v -> backupDatabase());

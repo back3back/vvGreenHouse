@@ -145,6 +145,7 @@ public class ControlFragment extends Fragment {
                 for (int i = 0; i < types.length; i++) types[i] = DeviceDef.ALL_DEVICES[i].type;
                 hardwareClient.controlDevicesBatch(currentGhId, types, "close");
                 mainHandler.post(() -> {
+                    if (!isAdded()) return;
                     refreshAllDeviceStates();
                     writeLog("ALL", "紧急停止", "手动");
                     Toast.makeText(getContext(), "所有设备已停止", Toast.LENGTH_SHORT).show();
@@ -159,6 +160,7 @@ public class ControlFragment extends Fragment {
                 for (int i = 0; i < types.length; i++) types[i] = DeviceDef.ALL_DEVICES[i].type;
                 hardwareClient.controlDevicesBatch(currentGhId, types, "open");
                 mainHandler.post(() -> {
+                    if (!isAdded()) return;
                     refreshAllDeviceStates();
                     writeLog("ALL", "一键全开", "手动");
                     Toast.makeText(getContext(), "所有设备已开启", Toast.LENGTH_SHORT).show();
@@ -191,6 +193,7 @@ public class ControlFragment extends Fragment {
                 new Thread(() -> {
                     hardwareClient.controlDevice(currentGhId, dd.type, action);
                     mainHandler.post(() -> {
+                        if (!isAdded()) return;
                         updateDeviceRowUI(dr, !isOn);
                         writeLog(dd.type, actionLabel, "手动");
                     });
@@ -257,6 +260,7 @@ public class ControlFragment extends Fragment {
             SensorData data = hardwareClient.readSensors(currentGhId);
             String log = hardwareClient.executeAutoControl(currentGhId, data);
             mainHandler.post(() -> {
+                if (!isAdded()) return;
                 refreshAllDeviceStates();
                 tvAutoStatus.setText("● 自动运行中 (10s) " + data.getRecordTime());
                 writeLog("AUTO", log, "自动");
@@ -273,10 +277,16 @@ public class ControlFragment extends Fragment {
     // ========== 日志 ==========
 
     private void writeLog(String deviceType, String action, String mode) {
-        DeviceDef dd = DeviceDef.findByType(deviceType);
+        final String name;
+        if ("ALL".equals(deviceType) || "AUTO".equals(deviceType)) {
+            name = deviceType;
+        } else {
+            DeviceDef dd = DeviceDef.findByType(deviceType);
+            name = dd.name;
+        }
         new Thread(() -> {
             dbHelper.saveDeviceLog(currentGhId, deviceType,
-                    dd.name, action, mode, "admin");
+                    name, action, mode, "admin");
         }).start();
     }
 

@@ -129,6 +129,11 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginTop="8dp" />
+
+                <Button android:id="@+id/btn_save_gh"
+                    android:layout_width="wrap_content" android:layout_height="38dp"
+                    android:layout_marginTop="10dp" android:text="保存大棚信息"
+                    android:textSize="13sp" android:backgroundTint="@color/primary" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
