@@ -3,16 +3,18 @@ package com.example.vvgreenhouse.hardware;
 import com.example.vvgreenhouse.model.SensorData;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 
 /**
  * 模拟硬件客户端 —— 开发阶段使用
  *
  * 特性：
- * - 在合理范围内生成伪随机传感器数据
- * - 支持分类"异常模式"：高温 / 低湿 / 高CO₂
- * - 模拟数据格式与真实硬件一致
+ * - 传感器数据模拟（合理范围波动 + 异常模式）
+ * - 设备状态模拟（Map存储开关状态）
+ * - 自动控制联动逻辑
  */
 public class MockHardwareClient implements IHardwareClient {
 
@@ -21,7 +23,7 @@ public class MockHardwareClient implements IHardwareClient {
 
     // ========== 异常模式 ==========
     private boolean abnormalMode = false;
-    private String abnormalType = "";  // "high_temp", "low_humidity", "high_co2"
+    private String abnormalType = "";
 
     // ========== 基准值 ==========
     private float baseTemp = 25.0f;
@@ -32,6 +34,12 @@ public class MockHardwareClient implements IHardwareClient {
     private float baseSoilHumidity = 55.0f;
     private float basePh = 6.5f;
     private float baseEc = 1.4f;
+
+    // ========== 设备状态存储 ==========
+    // key: "ghId_deviceType"
+    private final Map<String, Boolean> deviceStates = new HashMap<>();
+    // key: "ghId_controlMode" → "manual" / "auto"
+    private final Map<String, String> deviceModes = new HashMap<>();
 
     @Override
     public boolean connect(String ip, int port) {
@@ -49,30 +57,40 @@ public class MockHardwareClient implements IHardwareClient {
     public boolean isAbnormalMode() { return abnormalMode; }
     public String getAbnormalType() { return abnormalType; }
 
-    /** 旧版兼容：不带类型的开关 */
     public void setAbnormalMode(boolean enabled) {
         this.abnormalMode = enabled;
         this.abnormalType = enabled ? "high_temp" : "";
     }
 
-    /**
-     * 新版：指定异常类型
-     * @param enabled 是否启用
-     * @param type    异常类型: "high_temp" / "low_humidity" / "high_co2" / "" (全指标异常)
-     */
     public void setAbnormalMode(boolean enabled, String type) {
         this.abnormalMode = enabled;
         this.abnormalType = (type != null) ? type : "";
     }
 
-    /**
-     * 读取传感器数据（模拟）
-     */
+    // ========== 设备状态 API ==========
+
+    /** 获取设备当前状态 */
+    public boolean getDeviceState(int greenhouseId, String deviceType) {
+        String key = greenhouseId + "_" + deviceType;
+        return Boolean.TRUE.equals(deviceStates.get(key));
+    }
+
+    /** 获取控制模式 */
+    public String getControlMode(int greenhouseId) {
+        return deviceModes.getOrDefault(greenhouseId + "_mode", "manual");
+    }
+
+    /** 设置控制模式 */
+    public void setControlMode(int greenhouseId, String mode) {
+        deviceModes.put(greenhouseId + "_mode", mode);
+    }
+
+    // ========== 传感器数据 ==========
+
     @Override
     public SensorData readSensors(int greenhouseId) {
         SensorData data = new SensorData();
         data.setGreenhouseId(greenhouseId);
-        // 加入大棚偏移，使不同大棚数据略有差异
         float ghOffset = greenhouseId * 0.3f;
 
         if (abnormalMode) {
@@ -97,24 +115,20 @@ public class MockHardwareClient implements IHardwareClient {
     }
 
     private void generateAbnormalData(SensorData data, float offset) {
-        // 先按正常生成
         generateNormalData(data, offset);
-
-        // 然后覆盖指定异常指标
         switch (abnormalType) {
             case "high_temp":
-                data.setTemp(35.0f + random.nextFloat() * 5);         // 35~40°C
-                data.setSoilTemp(32.0f + random.nextFloat() * 4);     // 32~36°C
+                data.setTemp(35.0f + random.nextFloat() * 5);
+                data.setSoilTemp(32.0f + random.nextFloat() * 4);
                 break;
             case "low_humidity":
-                data.setHumidity(20.0f + random.nextFloat() * 15);    // 20~35%
-                data.setSoilHumidity(20.0f + random.nextFloat() * 15);// 20~35%
+                data.setHumidity(20.0f + random.nextFloat() * 15);
+                data.setSoilHumidity(20.0f + random.nextFloat() * 15);
                 break;
             case "high_co2":
-                data.setCo2(1200.0f + random.nextFloat() * 300);      // 1200~1500ppm
+                data.setCo2(1200.0f + random.nextFloat() * 300);
                 break;
             default:
-                // 全指标异常
                 data.setTemp(35.0f + random.nextFloat() * 5);
                 data.setHumidity(20.0f + random.nextFloat() * 15);
                 data.setCo2(1200.0f + random.nextFloat() * 300);
@@ -127,9 +141,96 @@ public class MockHardwareClient implements IHardwareClient {
         }
     }
 
+    // ========== 设备控制 ==========
+
     @Override
     public boolean controlDevice(int greenhouseId, String deviceType, String action) {
-        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+        String key = greenhouseId + "_" + deviceType;
+
+        switch (action) {
+            case "open":
+                deviceStates.put(key, true);
+                break;
+            case "close":
+                deviceStates.put(key, false);
+                break;
+            case "toggle":
+                boolean cur = getDeviceState(greenhouseId, deviceType);
+                deviceStates.put(key, !cur);
+                break;
+            case "auto":
+                deviceModes.put(key, "auto");
+                break;
+        }
+
+        // 模拟网络延迟
+        try { Thread.sleep(300 + random.nextInt(700)); } catch (InterruptedException ignored) {}
         return true;
+    }
+
+    /**
+     * 自动控制联动逻辑
+     * 根据传感器数据自动调节设备状态
+     * @return 本次联动操作描述
+     */
+    public String executeAutoControl(int greenhouseId, SensorData data) {
+        StringBuilder log = new StringBuilder();
+
+        // ===== 温控联动 =====
+        if (data.getTemp() > 30.0f) {
+            controlDevice(greenhouseId, "ventilation_window", "open");
+            controlDevice(greenhouseId, "wet_curtain_fan", "open");
+            controlDevice(greenhouseId, "circulation_fan_temp", "open");
+            log.append("高温→开通风窗+湿帘风机+环流风机; ");
+        } else if (data.getTemp() < 18.0f) {
+            controlDevice(greenhouseId, "heating_device", "open");
+            controlDevice(greenhouseId, "ventilation_window", "close");
+            controlDevice(greenhouseId, "wet_curtain_fan", "close");
+            log.append("低温→开热风供暖+关通风窗; ");
+        } else {
+            // 温度正常，关闭强制温控设备
+            controlDevice(greenhouseId, "heating_device", "close");
+            controlDevice(greenhouseId, "ventilation_window", "close");
+            controlDevice(greenhouseId, "wet_curtain_fan", "close");
+        }
+
+        // ===== 光控联动 =====
+        if (data.getLight() < 5000) {
+            controlDevice(greenhouseId, "fill_light", "open");
+            controlDevice(greenhouseId, "outer_shade", "close");
+            controlDevice(greenhouseId, "inner_shade", "close");
+            log.append("弱光→开补光灯+关遮阳; ");
+        } else if (data.getLight() > 50000) {
+            controlDevice(greenhouseId, "fill_light", "close");
+            controlDevice(greenhouseId, "outer_shade", "open");
+            controlDevice(greenhouseId, "inner_shade", "open");
+            log.append("强光→开外遮阳+内遮阳; ");
+        } else {
+            controlDevice(greenhouseId, "fill_light", "close");
+        }
+
+        // ===== CO₂联动 =====
+        if (data.getCo2() < 350) {
+            controlDevice(greenhouseId, "co2_generator", "open");
+            log.append("CO₂偏低→开补气; ");
+        } else if (data.getCo2() > 1000) {
+            controlDevice(greenhouseId, "co2_generator", "close");
+            controlDevice(greenhouseId, "circulation_fan_co2", "open");
+            log.append("CO₂偏高→关补气+开环流; ");
+        }
+
+        // ===== 湿度联动 =====
+        if (data.getHumidity() < 50) {
+            controlDevice(greenhouseId, "high_pressure_spray", "open");
+            log.append("低湿→开高压喷雾; ");
+        } else if (data.getHumidity() > 80) {
+            controlDevice(greenhouseId, "dehumidifier", "open");
+            log.append("高湿→开除湿; ");
+        }
+
+        if (log.length() == 0) {
+            log.append("环境正常，无联动操作");
+        }
+        return log.toString();
     }
 }

@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment getControlFragment() {
         if (ctrlFragment == null) {
-            ctrlFragment = PlaceholderFragment.newInstance("智能控制");
+            ctrlFragment = ControlFragment.newInstance(hardwareClient);
         }
         return ctrlFragment;
     }

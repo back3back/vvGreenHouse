@@ -21,7 +21,7 @@ import java.util.List;
 public class GreenhouseDBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "greenhouse.db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     // 单例
     private static GreenhouseDBHelper instance;
@@ -30,6 +30,7 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
     public static final String TABLE_USERS = "users";
     public static final String TABLE_GREENHOUSE = "greenhouse_info";
     public static final String TABLE_SENSOR = "sensor_data";
+    public static final String TABLE_DEVICE_LOGS = "device_logs";
 
     private GreenhouseDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -99,14 +100,40 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
             cv.put("location", "A区-" + i + "号");
             db.insert(TABLE_GREENHOUSE, null, cv);
         }
+
+        // ===== 设备操作日志表 =====
+        db.execSQL("CREATE TABLE " + TABLE_DEVICE_LOGS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "device_type VARCHAR(50) NOT NULL, "
+                + "device_name VARCHAR(100) NOT NULL, "
+                + "action VARCHAR(50) NOT NULL, "
+                + "mode VARCHAR(20) NOT NULL DEFAULT 'manual', "
+                + "operator VARCHAR(50) NOT NULL, "
+                + "operate_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "result VARCHAR(20) NOT NULL DEFAULT 'success', "
+                + "remarks TEXT)");
+        db.execSQL("CREATE INDEX idx_devlog_gh_time ON "
+                + TABLE_DEVICE_LOGS + "(greenhouse_id, operate_time)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SENSOR);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_GREENHOUSE);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL("CREATE TABLE " + TABLE_DEVICE_LOGS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "device_type VARCHAR(50) NOT NULL, "
+                    + "device_name VARCHAR(100) NOT NULL, "
+                    + "action VARCHAR(50) NOT NULL, "
+                    + "mode VARCHAR(20) NOT NULL DEFAULT 'manual', "
+                    + "operator VARCHAR(50) NOT NULL, "
+                    + "operate_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                    + "result VARCHAR(20) NOT NULL DEFAULT 'success', "
+                    + "remarks TEXT)");
+            db.execSQL("CREATE INDEX idx_devlog_gh_time ON "
+                    + TABLE_DEVICE_LOGS + "(greenhouse_id, operate_time)");
+        }
     }
 
     // ==================== 用户相关操作 ====================
@@ -232,5 +259,47 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return list;
+    }
+
+    // ==================== 设备日志操作 ====================
+
+    /**
+     * 保存设备操作日志
+     */
+    public void saveDeviceLog(int ghId, String deviceType, String deviceName,
+                               String action, String mode, String operator) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", ghId);
+        cv.put("device_type", deviceType);
+        cv.put("device_name", deviceName);
+        cv.put("action", action);
+        cv.put("mode", mode);
+        cv.put("operator", operator);
+        cv.put("operate_time",
+                new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                        .format(new java.util.Date()));
+        db.insert(TABLE_DEVICE_LOGS, null, cv);
+    }
+
+    /**
+     * 获取最近的操作日志（格式化文本，供列表展示）
+     */
+    public List<String> getDeviceLogs(int limit) {
+        List<String> logs = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT operate_time, device_name, action, mode, operator FROM " + TABLE_DEVICE_LOGS
+                        + " ORDER BY operate_time DESC LIMIT ?",
+                new String[]{String.valueOf(limit)});
+        while (cursor.moveToNext()) {
+            logs.add(cursor.getString(0) + " | "
+                    + cursor.getString(1) + " | "
+                    + cursor.getString(2) + " | "
+                    + cursor.getString(3) + " | "
+                    + cursor.getString(4));
+        }
+        cursor.close();
+        return logs;
     }
 }
