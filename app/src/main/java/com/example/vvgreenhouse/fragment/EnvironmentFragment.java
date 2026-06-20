@@ -16,7 +16,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.vvgreenhouse.R;
 import com.example.vvgreenhouse.activity.MainActivity;
 import com.example.vvgreenhouse.database.GreenhouseDBHelper;
-import com.example.vvgreenhouse.hardware.MockHardwareClient;
+import com.example.vvgreenhouse.hardware.IHardwareClient;
 import com.example.vvgreenhouse.model.AlertRecord;
 import com.example.vvgreenhouse.model.SensorData;
 import com.example.vvgreenhouse.model.ThresholdConfig;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class EnvironmentFragment extends Fragment {
 
     // ========== 核心组件 ==========
-    private MockHardwareClient hardwareClient;
+    private IHardwareClient hardwareClient;
     private GreenhouseDBHelper dbHelper;
     private ThresholdConfig thresholdConfig;
     private Handler mainHandler;
@@ -67,7 +67,7 @@ public class EnvironmentFragment extends Fragment {
 
     // ========== 工厂方法 ==========
 
-    public static EnvironmentFragment newInstance(MockHardwareClient client) {
+    public static EnvironmentFragment newInstance(IHardwareClient client) {
         EnvironmentFragment f = new EnvironmentFragment();
         f.hardwareClient = client;
         return f;

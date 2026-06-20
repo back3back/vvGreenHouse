@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.vvgreenhouse.R;
 import com.example.vvgreenhouse.database.GreenhouseDBHelper;
-import com.example.vvgreenhouse.hardware.MockHardwareClient;
+import com.example.vvgreenhouse.hardware.IHardwareClient;
 import com.example.vvgreenhouse.model.DeviceDef;
 import com.example.vvgreenhouse.model.SensorData;
 import com.google.android.material.tabs.TabLayout;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ControlFragment extends Fragment {
 
-    private MockHardwareClient hardwareClient;
+    private IHardwareClient hardwareClient;
     private GreenhouseDBHelper dbHelper;
     private Handler mainHandler;
 
@@ -54,7 +54,7 @@ public class ControlFragment extends Fragment {
     // 定时器
     private ScheduledExecutorService autoScheduler;
 
-    public static ControlFragment newInstance(MockHardwareClient client) {
+    public static ControlFragment newInstance(IHardwareClient client) {
         ControlFragment f = new ControlFragment();
         f.hardwareClient = client;
         return f;

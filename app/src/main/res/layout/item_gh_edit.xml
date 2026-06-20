@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="6dp"
+    android:paddingHorizontal="4dp">
+
+    <TextView
+        android:id="@+id/tv_gh_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="GH-001"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/et_gh_name"
+        android:layout_width="0dp"
+        android:layout_height="36dp"
+        android:layout_weight="2"
+        android:text="花卉大棚1"
+        android:singleLine="true"
+        android:textSize="13sp"
+        android:background="@drawable/spinner_bg"
+        android:paddingStart="6dp"
+        android:layout_marginEnd="4dp" />
+
+    <EditText
+        android:id="@+id/et_gh_crop"
+        android:layout_width="0dp"
+        android:layout_height="36dp"
+        android:layout_weight="1.5"
+        android:text="玫瑰"
+        android:singleLine="true"
+        android:textSize="13sp"
+        android:background="@drawable/spinner_bg"
+        android:paddingStart="6dp"
+        android:layout_marginEnd="4dp" />
+
+    <EditText
+        android:id="@+id/et_gh_area"
+        android:layout_width="0dp"
+        android:layout_height="36dp"
+        android:layout_weight="1"
+        android:text="500"
+        android:singleLine="true"
+        android:textSize="13sp"
+        android:inputType="numberDecimal"
+        android:background="@drawable/spinner_bg"
+        android:paddingStart="6dp" />
+</LinearLayout>

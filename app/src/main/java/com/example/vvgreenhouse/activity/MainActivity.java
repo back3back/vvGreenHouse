@@ -9,7 +9,8 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import com.example.vvgreenhouse.R;
 import com.example.vvgreenhouse.fragment.*;
-import com.example.vvgreenhouse.hardware.MockHardwareClient;
+import com.example.vvgreenhouse.hardware.HardwareClientFactory;
+import com.example.vvgreenhouse.hardware.IHardwareClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 /**
@@ -21,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvUserInfo, tvConnectionStatus;
 
     private String username, realName, role;
-    private MockHardwareClient hardwareClient;
+    private IHardwareClient hardwareClient;
 
     // 通知渠道ID
     public static final String CHANNEL_ALERTS = "greenhouse_alerts";
@@ -29,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
 
     // 当前 Fragment 缓存
     private Fragment envFragment, ctrlFragment, mgmtFragment, secFragment, settingsFragment;
+
+    // 标记是否为真实硬件模式
+    private boolean isRealHardware;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,11 +73,16 @@ public class MainActivity extends AppCompatActivity {
         tvUserInfo.setText(roleDisplay + ": " + realName);
     }
 
-    /** 初始化模拟硬件连接 */
+    /** 初始化硬件连接（根据模式选择模拟/真实） */
     private void initHardware() {
-        hardwareClient = new MockHardwareClient();
-        boolean ok = hardwareClient.connect("127.0.0.1", 8899);
-        tvConnectionStatus.setText(ok ? "● 已连接(模拟)" : "○ 未连接");
+        hardwareClient = HardwareClientFactory.create(this);
+        String ip = HardwareClientFactory.getServerIp(this);
+        int port = HardwareClientFactory.getServerPort(this);
+        boolean mock = HardwareClientFactory.isMockMode(this);
+        isRealHardware = !mock;
+        boolean ok = hardwareClient.connect(ip, port);
+        tvConnectionStatus.setText(ok ? (mock ? "● 已连接(模拟)" : "● 已连接(硬件)")
+                : "○ 未连接");
     }
 
     private void setupBottomNav() {
@@ -137,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment getSettingsFragment() {
         if (settingsFragment == null) {
-            settingsFragment = PlaceholderFragment.newInstance("系统设置");
+            settingsFragment = new SettingsFragment();
         }
         return settingsFragment;
     }

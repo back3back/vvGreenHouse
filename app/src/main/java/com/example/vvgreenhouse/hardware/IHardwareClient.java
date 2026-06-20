@@ -8,30 +8,27 @@ import com.example.vvgreenhouse.model.SensorData;
  */
 public interface IHardwareClient {
 
-    /**
-     * 连接硬件设备
-     * @param ip   设备IP地址
-     * @param port 设备端口
-     * @return 连接是否成功
-     */
+    /** 连接硬件设备 */
     boolean connect(String ip, int port);
 
     /** 断开连接 */
     void disconnect();
 
-    /**
-     * 读取传感器数据
-     * @param greenhouseId 大棚ID
-     * @return 传感器数据对象
-     */
+    /** 读取传感器数据 */
     SensorData readSensors(int greenhouseId);
 
-    /**
-     * 控制设备
-     * @param greenhouseId 大棚ID
-     * @param deviceType   设备类型 (fan/pump/shade/light/heater)
-     * @param action       动作 (on/off)
-     * @return 控制是否成功
-     */
+    /** 控制单个设备 */
     boolean controlDevice(int greenhouseId, String deviceType, String action);
+
+    /** 获取设备当前状态 */
+    boolean getDeviceState(int greenhouseId, String deviceType);
+
+    /** 批量控制设备（一次连接多次指令） */
+    void controlDevicesBatch(int greenhouseId, String[] deviceTypes, String action);
+
+    /** 设置异常模拟模式（Mock实现有效，Real实现忽略） */
+    void setAbnormalMode(boolean enabled, String type);
+
+    /** 自动控制联动逻辑（Mock实现有效，Real实现返回空字符串） */
+    String executeAutoControl(int greenhouseId, SensorData data);
 }
