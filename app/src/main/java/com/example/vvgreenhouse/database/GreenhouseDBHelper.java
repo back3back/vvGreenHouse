@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.example.vvgreenhouse.model.SensorData;
 import com.example.vvgreenhouse.model.User;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 数据库管理类 —— 管理全部SQLite表的创建与CRUD操作
@@ -184,5 +186,51 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
         d.setEc(c.getFloat(c.getColumnIndexOrThrow("ec")));
         d.setRecordTime(c.getString(c.getColumnIndexOrThrow("record_time")));
         return d;
+    }
+
+    // ==================== 历史查询 ====================
+
+    /**
+     * 查询历史传感器数据
+     *
+     * @param greenhouseId 大棚ID
+     * @param startTime    起始时间 "yyyy-MM-dd HH:mm:ss"
+     * @param endTime      结束时间 "yyyy-MM-dd HH:mm:ss"
+     * @param limit        最大条数，0=不限制
+     * @return 按时间升序排列的数据列表
+     */
+    public List<SensorData> getHistoryData(int greenhouseId, String startTime, String endTime, int limit) {
+        List<SensorData> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        String sql = "SELECT * FROM " + TABLE_SENSOR
+                + " WHERE greenhouse_id=? AND record_time BETWEEN ? AND ?"
+                + " ORDER BY record_time ASC";
+        if (limit > 0) {
+            sql += " LIMIT " + limit;
+        }
+        Cursor cursor = db.rawQuery(sql, new String[]{
+                String.valueOf(greenhouseId), startTime, endTime});
+        while (cursor.moveToNext()) {
+            list.add(cursorToSensorData(cursor));
+        }
+        cursor.close();
+        return list;
+    }
+
+    /**
+     * 查询某个大棚最新的 N 条数据
+     */
+    public List<SensorData> getRecentData(int greenhouseId, int count) {
+        List<SensorData> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT * FROM " + TABLE_SENSOR
+                        + " WHERE greenhouse_id=? ORDER BY record_time DESC LIMIT ?",
+                new String[]{String.valueOf(greenhouseId), String.valueOf(count)});
+        while (cursor.moveToNext()) {
+            list.add(cursorToSensorData(cursor));
+        }
+        cursor.close();
+        return list;
     }
 }

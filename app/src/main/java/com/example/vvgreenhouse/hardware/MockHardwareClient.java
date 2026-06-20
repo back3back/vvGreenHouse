@@ -11,7 +11,7 @@ import java.util.Random;
  *
  * 特性：
  * - 在合理范围内生成伪随机传感器数据
- * - 支持"异常模式"：模拟温度超标、湿度过低等告警场景
+ * - 支持分类"异常模式"：高温 / 低湿 / 高CO₂
  * - 模拟数据格式与真实硬件一致
  */
 public class MockHardwareClient implements IHardwareClient {
@@ -19,10 +19,11 @@ public class MockHardwareClient implements IHardwareClient {
     private final Random random = new Random();
     private boolean connected = false;
 
-    /** 异常模式开关：开启后数据将超出正常阈值 */
+    // ========== 异常模式 ==========
     private boolean abnormalMode = false;
+    private String abnormalType = "";  // "high_temp", "low_humidity", "high_co2"
 
-    /** 基准值（作为波动中心，而不是全随机） */
+    // ========== 基准值 ==========
     private float baseTemp = 25.0f;
     private float baseHumidity = 65.0f;
     private float baseCo2 = 450.0f;
@@ -32,18 +33,10 @@ public class MockHardwareClient implements IHardwareClient {
     private float basePh = 6.5f;
     private float baseEc = 1.4f;
 
-    // ========== 异常模式基准值 ==========
-    private static final float ABNORMAL_TEMP = 35.0f;
-    private static final float ABNORMAL_HUMIDITY = 30.0f;
-    private static final float ABNORMAL_CO2 = 1200.0f;
-    private static final float ABNORMAL_SOIL_HUMIDITY = 25.0f;
-    private static final float ABNORMAL_PH = 8.5f;
-    private static final float ABNORMAL_EC = 3.5f;
-
     @Override
     public boolean connect(String ip, int port) {
         connected = true;
-        return true; // 模拟连接成功
+        return true;
     }
 
     @Override
@@ -51,57 +44,92 @@ public class MockHardwareClient implements IHardwareClient {
         connected = false;
     }
 
-    /** 是否处于异常模式 */
-    public boolean isAbnormalMode() {
-        return abnormalMode;
+    // ========== 异常模式 API ==========
+
+    public boolean isAbnormalMode() { return abnormalMode; }
+    public String getAbnormalType() { return abnormalType; }
+
+    /** 旧版兼容：不带类型的开关 */
+    public void setAbnormalMode(boolean enabled) {
+        this.abnormalMode = enabled;
+        this.abnormalType = enabled ? "high_temp" : "";
     }
 
-    /** 切换异常模式 */
-    public void setAbnormalMode(boolean abnormalMode) {
-        this.abnormalMode = abnormalMode;
+    /**
+     * 新版：指定异常类型
+     * @param enabled 是否启用
+     * @param type    异常类型: "high_temp" / "low_humidity" / "high_co2" / "" (全指标异常)
+     */
+    public void setAbnormalMode(boolean enabled, String type) {
+        this.abnormalMode = enabled;
+        this.abnormalType = (type != null) ? type : "";
     }
 
     /**
      * 读取传感器数据（模拟）
-     * 正常模式：数据在合理范围内围绕基准值波动
-     * 异常模式：数据趋向告警阈值
      */
     @Override
     public SensorData readSensors(int greenhouseId) {
         SensorData data = new SensorData();
         data.setGreenhouseId(greenhouseId);
+        // 加入大棚偏移，使不同大棚数据略有差异
+        float ghOffset = greenhouseId * 0.3f;
 
         if (abnormalMode) {
-            // 异常模式：数据趋向危险区间
-            data.setTemp(ABNORMAL_TEMP + random.nextFloat() * 3 - 1.5f);       // 33.5~36.5
-            data.setHumidity(ABNORMAL_HUMIDITY + random.nextFloat() * 10);     // 30~40
-            data.setCo2(ABNORMAL_CO2 + random.nextFloat() * 200);               // 1200~1400
-            data.setLight(50000 + random.nextFloat() * 10000);                  // 50000~60000
-            data.setSoilTemp(35.0f + random.nextFloat() * 3);                    // 35~38
-            data.setSoilHumidity(ABNORMAL_SOIL_HUMIDITY + random.nextFloat() * 10); // 25~35
-            data.setPh(ABNORMAL_PH + random.nextFloat() * 0.8f - 0.4f);         // 8.1~8.9
-            data.setEc(ABNORMAL_EC + random.nextFloat() * 0.5f);                 // 3.5~4.0
+            generateAbnormalData(data, ghOffset);
         } else {
-            // 正常模式：基准值附近小范围波动（±波动幅度）
-            data.setTemp(baseTemp + random.nextFloat() * 4 - 2);          // 23~27
-            data.setHumidity(baseHumidity + random.nextFloat() * 10 - 5); // 60~70
-            data.setCo2(baseCo2 + random.nextFloat() * 100 - 50);         // 400~500
-            data.setLight(baseLight + random.nextFloat() * 10000 - 5000); // 10000~20000
-            data.setSoilTemp(baseSoilTemp + random.nextFloat() * 3 - 1.5f);        // 20.5~23.5
-            data.setSoilHumidity(baseSoilHumidity + random.nextFloat() * 10 - 5);   // 50~60
-            data.setPh(basePh + random.nextFloat() * 0.6f - 0.3f);                  // 6.2~6.8
-            data.setEc(baseEc + random.nextFloat() * 0.4f - 0.2f);                  // 1.2~1.6
+            generateNormalData(data, ghOffset);
         }
 
-        // 采集时间
         data.setRecordTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
         return data;
     }
 
+    private void generateNormalData(SensorData data, float offset) {
+        data.setTemp(baseTemp + offset + random.nextFloat() * 4 - 2);
+        data.setHumidity(baseHumidity + random.nextFloat() * 10 - 5);
+        data.setCo2(baseCo2 + offset * 10 + random.nextFloat() * 100 - 50);
+        data.setLight(baseLight + random.nextFloat() * 10000 - 5000);
+        data.setSoilTemp(baseSoilTemp + offset + random.nextFloat() * 3 - 1.5f);
+        data.setSoilHumidity(baseSoilHumidity + random.nextFloat() * 10 - 5);
+        data.setPh(basePh + random.nextFloat() * 0.6f - 0.3f);
+        data.setEc(baseEc + random.nextFloat() * 0.4f - 0.2f);
+    }
+
+    private void generateAbnormalData(SensorData data, float offset) {
+        // 先按正常生成
+        generateNormalData(data, offset);
+
+        // 然后覆盖指定异常指标
+        switch (abnormalType) {
+            case "high_temp":
+                data.setTemp(35.0f + random.nextFloat() * 5);         // 35~40°C
+                data.setSoilTemp(32.0f + random.nextFloat() * 4);     // 32~36°C
+                break;
+            case "low_humidity":
+                data.setHumidity(20.0f + random.nextFloat() * 15);    // 20~35%
+                data.setSoilHumidity(20.0f + random.nextFloat() * 15);// 20~35%
+                break;
+            case "high_co2":
+                data.setCo2(1200.0f + random.nextFloat() * 300);      // 1200~1500ppm
+                break;
+            default:
+                // 全指标异常
+                data.setTemp(35.0f + random.nextFloat() * 5);
+                data.setHumidity(20.0f + random.nextFloat() * 15);
+                data.setCo2(1200.0f + random.nextFloat() * 300);
+                data.setLight(50000 + random.nextFloat() * 10000);
+                data.setSoilTemp(32.0f + random.nextFloat() * 4);
+                data.setSoilHumidity(20.0f + random.nextFloat() * 15);
+                data.setPh(8.0f + random.nextFloat() * 1.5f);
+                data.setEc(3.0f + random.nextFloat() * 1.0f);
+                break;
+        }
+    }
+
     @Override
     public boolean controlDevice(int greenhouseId, String deviceType, String action) {
-        // 模拟延时（真实设备响应时间）
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
-        return true; // 模拟控制成功
+        return true;
     }
 }

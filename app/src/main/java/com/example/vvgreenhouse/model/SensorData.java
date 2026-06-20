@@ -82,4 +82,72 @@ public class SensorData {
                 + "  湿度: " + String.format("%.1f", humidity) + "%"
                 + "  CO₂: " + String.format("%.0f", co2) + "ppm";
     }
+
+    /**
+     * 按传感器类型名获取数值，供阈值比对
+     * @param sensorType temp / humidity / co2 / light / soil_temp / soil_humidity / ph / ec
+     */
+    public float getValueByName(String sensorType) {
+        if (sensorType == null) return 0f;
+        switch (sensorType) {
+            case "temp": return temp;
+            case "humidity": return humidity;
+            case "co2": return co2;
+            case "light": return light;
+            case "soil_temp": return soilTemp;
+            case "soil_humidity": return soilHumidity;
+            case "ph": return ph;
+            case "ec": return ec;
+            default: return 0f;
+        }
+    }
+
+    /** 传感器类型 → 单位 */
+    public static String getUnit(String sensorType) {
+        switch (sensorType) {
+            case "temp": case "soil_temp": return "°C";
+            case "humidity": case "soil_humidity": return "%";
+            case "co2": return "ppm";
+            case "light": return "lux";
+            case "ph": return "";
+            case "ec": return "mS/cm";
+            default: return "";
+        }
+    }
+
+    /** 传感器类型 → 中文名 */
+    public static String getChineseName(String sensorType) {
+        switch (sensorType) {
+            case "temp": return "空气温度";
+            case "humidity": return "空气湿度";
+            case "co2": return "CO₂浓度";
+            case "light": return "光照强度";
+            case "soil_temp": return "土壤温度";
+            case "soil_humidity": return "土壤湿度";
+            case "ph": return "土壤pH值";
+            case "ec": return "土壤EC值";
+            default: return sensorType;
+        }
+    }
+
+    /** 所有传感器类型列表 */
+    public static final String[] SENSOR_TYPES = {
+        "temp", "humidity", "co2", "light",
+        "soil_temp", "soil_humidity", "ph", "ec"
+    };
+
+    /** 传感器类型 → Emoji 图标 */
+    public static String getIcon(String sensorType) {
+        switch (sensorType) {
+            case "temp": return "🌡";
+            case "humidity": return "💧";
+            case "co2": return "🫧";
+            case "light": return "☀";
+            case "soil_temp": return "🌱";
+            case "soil_humidity": return "💦";
+            case "ph": return "⚗";
+            case "ec": return "⚡";
+            default: return "📊";
+        }
+    }
 }
