@@ -29,7 +29,11 @@ public class HeartbeatService {
         scheduler.scheduleWithFixedDelay(() -> {
             if (!running || !client.isConnected()) return;
             try {
-                client.sendHeartbeat();
+                // Proactively send a dummy command to keep TCP alive
+                // MODBUS doesn't have a dedicated heartbeat; send a small read
+                byte[] heartbeat = FroConstants.hexToBytes(
+                        FroConstants.buildCmdWithCRC(FroConstants.TEMHUM_CMD_PREFIX));
+                client.send(heartbeat);
             } catch (IOException e) {
                 Log.w(TAG, "Heartbeat failed: " + e.getMessage());
             }
