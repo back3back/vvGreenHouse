@@ -140,22 +140,30 @@ public class ControlFragment extends Fragment {
 
         // 紧急停止
         view.findViewById(R.id.btn_emergency_stop).setOnClickListener(v -> {
-            for (DeviceDef d : DeviceDef.ALL_DEVICES) {
-                hardwareClient.controlDevice(currentGhId, d.type, "close");
-            }
-            refreshAllDeviceStates();
-            writeLog("ALL", "紧急停止", "手动");
-            Toast.makeText(getContext(), "所有设备已停止", Toast.LENGTH_SHORT).show();
+            new Thread(() -> {
+                String[] types = new String[DeviceDef.ALL_DEVICES.length];
+                for (int i = 0; i < types.length; i++) types[i] = DeviceDef.ALL_DEVICES[i].type;
+                hardwareClient.controlDevicesBatch(currentGhId, types, "close");
+                mainHandler.post(() -> {
+                    refreshAllDeviceStates();
+                    writeLog("ALL", "紧急停止", "手动");
+                    Toast.makeText(getContext(), "所有设备已停止", Toast.LENGTH_SHORT).show();
+                });
+            }).start();
         });
 
         // 一键全开
         view.findViewById(R.id.btn_all_open).setOnClickListener(v -> {
-            for (DeviceDef d : DeviceDef.ALL_DEVICES) {
-                hardwareClient.controlDevice(currentGhId, d.type, "open");
-            }
-            refreshAllDeviceStates();
-            writeLog("ALL", "一键全开", "手动");
-            Toast.makeText(getContext(), "所有设备已开启", Toast.LENGTH_SHORT).show();
+            new Thread(() -> {
+                String[] types = new String[DeviceDef.ALL_DEVICES.length];
+                for (int i = 0; i < types.length; i++) types[i] = DeviceDef.ALL_DEVICES[i].type;
+                hardwareClient.controlDevicesBatch(currentGhId, types, "open");
+                mainHandler.post(() -> {
+                    refreshAllDeviceStates();
+                    writeLog("ALL", "一键全开", "手动");
+                    Toast.makeText(getContext(), "所有设备已开启", Toast.LENGTH_SHORT).show();
+                });
+            }).start();
         });
     }
 

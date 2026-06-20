@@ -1,5 +1,6 @@
 package com.example.vvgreenhouse.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,11 +14,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import com.example.vvgreenhouse.R;
+import com.example.vvgreenhouse.activity.MainActivity;
 import com.example.vvgreenhouse.database.GreenhouseDBHelper;
 import com.example.vvgreenhouse.hardware.MockHardwareClient;
+import com.example.vvgreenhouse.model.AlertRecord;
 import com.example.vvgreenhouse.model.SensorData;
 import com.example.vvgreenhouse.model.ThresholdConfig;
+import com.example.vvgreenhouse.utils.AlertChecker;
 import com.google.android.material.tabs.TabLayout;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -226,9 +231,29 @@ public class EnvironmentFragment extends Fragment {
     private void startAutoRefresh() {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleWithFixedDelay(() -> {
-            // 后台线程读取 + 存储
+            // 后台线程读取 + 存储 + 预警检测
             SensorData data = hardwareClient.readSensors(currentGhId);
             dbHelper.saveSensorData(data);
+            // 预警检测
+            List<AlertRecord> alerts = AlertChecker.check(data, thresholdConfig);
+            for (AlertRecord alert : alerts) {
+                dbHelper.saveAlertRecord(alert);
+            }
+            // 推送通知
+            Context ctx = getContext();
+            if (ctx != null && !alerts.isEmpty()) {
+                AlertRecord first = alerts.get(0);
+                String title = "⚠ 温室预警: " + first.getLevelName();
+                String content = "GH-" + String.format("%03d", currentGhId)
+                        + " " + first.getSensorName() + " "
+                        + formatValue(first.getValue(), first.getSensorType())
+                        + SensorData.getUnit(first.getSensorType()) + " "
+                        + first.getDirection();
+                if (alerts.size() > 1) {
+                    content += " 等" + alerts.size() + "项超标";
+                }
+                MainActivity.postAlertNotification(ctx, title, content);
+            }
             // 主线程更新UI
             mainHandler.post(() -> updateCardUI(data));
         }, 0, REFRESH_INTERVAL_SEC, TimeUnit.SECONDS);
@@ -244,6 +269,25 @@ public class EnvironmentFragment extends Fragment {
         new Thread(() -> {
             SensorData data = hardwareClient.readSensors(currentGhId);
             long id = dbHelper.saveSensorData(data);
+            // 预警检测 + 推送通知
+            Context ctx = getContext();
+            List<AlertRecord> alerts = AlertChecker.check(data, thresholdConfig);
+            for (AlertRecord alert : alerts) {
+                dbHelper.saveAlertRecord(alert);
+            }
+            if (ctx != null && !alerts.isEmpty()) {
+                AlertRecord first = alerts.get(0);
+                String title = "⚠ 温室预警: " + first.getLevelName();
+                String content = "GH-" + String.format("%03d", currentGhId)
+                        + " " + first.getSensorName() + " "
+                        + formatValue(first.getValue(), first.getSensorType())
+                        + SensorData.getUnit(first.getSensorType()) + " "
+                        + first.getDirection();
+                if (alerts.size() > 1) {
+                    content += " 等" + alerts.size() + "项超标";
+                }
+                MainActivity.postAlertNotification(ctx, title, content);
+            }
             mainHandler.post(() -> {
                 updateCardUI(data);
                 tvLastUpdate.setText("上次更新: " + data.getRecordTime() + "  (id=" + id + ")");

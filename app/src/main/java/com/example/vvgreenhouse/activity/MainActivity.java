@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import com.example.vvgreenhouse.R;
 import com.example.vvgreenhouse.fragment.*;
@@ -20,6 +22,10 @@ public class MainActivity extends AppCompatActivity {
 
     private String username, realName, role;
     private MockHardwareClient hardwareClient;
+
+    // 通知渠道ID
+    public static final String CHANNEL_ALERTS = "greenhouse_alerts";
+    private static final int NOTIFICATION_ALERT_ID = 1001;
 
     // 当前 Fragment 缓存
     private Fragment envFragment, ctrlFragment, mgmtFragment, secFragment, settingsFragment;
@@ -39,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
         initHardware();
+        createNotificationChannel();
         setupBottomNav();
 
         // 默认显示环境监测页
@@ -123,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment getSecFragment() {
         if (secFragment == null) {
-            secFragment = PlaceholderFragment.newInstance("安防预警");
+            secFragment = new SecurityFragment();
         }
         return secFragment;
     }
@@ -133,5 +140,60 @@ public class MainActivity extends AppCompatActivity {
             settingsFragment = PlaceholderFragment.newInstance("系统设置");
         }
         return settingsFragment;
+    }
+
+    @Override
+    public void onBackPressed() {
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        if (count > 0) {
+            getSupportFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    // ==================== 通知渠道 ====================
+
+    private void createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                    CHANNEL_ALERTS,
+                    "温室预警通知",
+                    android.app.NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("温室环境参数超阈值预警通知");
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 300, 200, 300});
+            android.app.NotificationManager nm =
+                    (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    public static void postAlertNotification(android.content.Context ctx,
+                                              String title, String content) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(ctx, CHANNEL_ALERTS)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(content))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setVibrate(new long[]{0, 300, 200, 300});
+
+        android.content.Intent intent = new android.content.Intent(ctx, MainActivity.class);
+        intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK |
+                android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        android.app.PendingIntent pendingIntent = android.app.PendingIntent.getActivity(
+                ctx, 0, intent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT |
+                        android.app.PendingIntent.FLAG_IMMUTABLE);
+        builder.setContentIntent(pendingIntent);
+
+        try {
+            NotificationManagerCompat.from(ctx).notify(NOTIFICATION_ALERT_ID, builder.build());
+        } catch (SecurityException ignored) {
+        }
     }
 }

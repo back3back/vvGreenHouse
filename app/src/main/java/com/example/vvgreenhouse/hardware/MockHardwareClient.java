@@ -164,8 +164,22 @@ public class MockHardwareClient implements IHardwareClient {
         }
 
         // 模拟网络延迟
-        try { Thread.sleep(300 + random.nextInt(700)); } catch (InterruptedException ignored) {}
+        try { Thread.sleep(100 + random.nextInt(200)); } catch (InterruptedException ignored) {}
         return true;
+    }
+
+    /**
+     * 批量控制设备——仅睡一次，避免逐个 sleep 累积导致响应慢
+     */
+    public void controlDevicesBatch(int greenhouseId, String[] deviceTypes, String action) {
+        for (String type : deviceTypes) {
+            String key = greenhouseId + "_" + type;
+            switch (action) {
+                case "open":  deviceStates.put(key, true);  break;
+                case "close": deviceStates.put(key, false); break;
+            }
+        }
+        try { Thread.sleep(100 + random.nextInt(200)); } catch (InterruptedException ignored) {}
     }
 
     /**

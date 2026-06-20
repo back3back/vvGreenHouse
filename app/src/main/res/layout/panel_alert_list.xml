@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- 筛选栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="@color/white"
+        android:elevation="1dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="类型:"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginEnd="4dp" />
+
+        <Spinner
+            android:id="@+id/sp_filter_type"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="3"
+            android:background="@drawable/spinner_bg" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="级别:"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="4dp" />
+
+        <Spinner
+            android:id="@+id/sp_filter_level"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="2"
+            android:background="@drawable/spinner_bg" />
+
+        <Button
+            android:id="@+id/btn_filter"
+            android:layout_width="48dp"
+            android:layout_height="36dp"
+            android:text="筛"
+            android:textSize="13sp"
+            android:layout_marginStart="4dp"
+            android:backgroundTint="@color/primary" />
+    </LinearLayout>
+
+    <!-- 列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_alert_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/tv_alert_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="暂无预警记录"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_gravity="center"
+        android:layout_marginTop="80dp"
+        android:visibility="gone" />
+</LinearLayout>

@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.example.vvgreenhouse.model.SensorData;
+import com.example.vvgreenhouse.model.AlertRecord;
+import com.example.vvgreenhouse.model.AccessLog;
 import com.example.vvgreenhouse.model.User;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,7 @@ import java.util.List;
 public class GreenhouseDBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "greenhouse.db";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3;
 
     // 单例
     private static GreenhouseDBHelper instance;
@@ -31,6 +33,8 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
     public static final String TABLE_GREENHOUSE = "greenhouse_info";
     public static final String TABLE_SENSOR = "sensor_data";
     public static final String TABLE_DEVICE_LOGS = "device_logs";
+    public static final String TABLE_ALERT_RECORDS = "alert_records";
+    public static final String TABLE_ACCESS_LOGS = "access_logs";
 
     private GreenhouseDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -115,6 +119,36 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
                 + "remarks TEXT)");
         db.execSQL("CREATE INDEX idx_devlog_gh_time ON "
                 + TABLE_DEVICE_LOGS + "(greenhouse_id, operate_time)");
+
+        // ===== 预警记录表 =====
+        db.execSQL("CREATE TABLE " + TABLE_ALERT_RECORDS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "sensor_type VARCHAR(30) NOT NULL, "
+                + "sensor_name VARCHAR(50) NOT NULL, "
+                + "value FLOAT NOT NULL, "
+                + "threshold_min FLOAT NOT NULL, "
+                + "threshold_max FLOAT NOT NULL, "
+                + "level INTEGER NOT NULL DEFAULT 1, "
+                + "level_name VARCHAR(10), "
+                + "status INTEGER NOT NULL DEFAULT 0, "
+                + "record_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "handle_time DATETIME, "
+                + "handler VARCHAR(50))");
+        db.execSQL("CREATE INDEX idx_alert_gh_time ON "
+                + TABLE_ALERT_RECORDS + "(greenhouse_id, record_time)");
+
+        // ===== 门锁/人体感应记录表 =====
+        db.execSQL("CREATE TABLE " + TABLE_ACCESS_LOGS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "event_type VARCHAR(30) NOT NULL, "
+                + "event_name VARCHAR(50) NOT NULL, "
+                + "operator VARCHAR(50) NOT NULL DEFAULT '系统', "
+                + "record_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "remarks TEXT)");
+        db.execSQL("CREATE INDEX idx_access_gh_time ON "
+                + TABLE_ACCESS_LOGS + "(greenhouse_id, record_time)");
     }
 
     @Override
@@ -133,6 +167,34 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
                     + "remarks TEXT)");
             db.execSQL("CREATE INDEX idx_devlog_gh_time ON "
                     + TABLE_DEVICE_LOGS + "(greenhouse_id, operate_time)");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("CREATE TABLE " + TABLE_ALERT_RECORDS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "sensor_type VARCHAR(30) NOT NULL, "
+                    + "sensor_name VARCHAR(50) NOT NULL, "
+                    + "value FLOAT NOT NULL, "
+                    + "threshold_min FLOAT NOT NULL, "
+                    + "threshold_max FLOAT NOT NULL, "
+                    + "level INTEGER NOT NULL DEFAULT 1, "
+                    + "level_name VARCHAR(10), "
+                    + "status INTEGER NOT NULL DEFAULT 0, "
+                    + "record_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                    + "handle_time DATETIME, "
+                    + "handler VARCHAR(50))");
+            db.execSQL("CREATE INDEX idx_alert_gh_time ON "
+                    + TABLE_ALERT_RECORDS + "(greenhouse_id, record_time)");
+            db.execSQL("CREATE TABLE " + TABLE_ACCESS_LOGS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "event_type VARCHAR(30) NOT NULL, "
+                    + "event_name VARCHAR(50) NOT NULL, "
+                    + "operator VARCHAR(50) NOT NULL DEFAULT '系统', "
+                    + "record_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                    + "remarks TEXT)");
+            db.execSQL("CREATE INDEX idx_access_gh_time ON "
+                    + TABLE_ACCESS_LOGS + "(greenhouse_id, record_time)");
         }
     }
 
@@ -301,5 +363,150 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return logs;
+    }
+
+    // ==================== 预警记录操作 ====================
+
+    /** 保存预警记录 */
+    public long saveAlertRecord(AlertRecord alert) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", alert.getGreenhouseId());
+        cv.put("sensor_type", alert.getSensorType());
+        cv.put("sensor_name", alert.getSensorName());
+        cv.put("value", alert.getValue());
+        cv.put("threshold_min", alert.getThresholdMin());
+        cv.put("threshold_max", alert.getThresholdMax());
+        cv.put("level", alert.getLevel());
+        cv.put("level_name", alert.getLevelName());
+        cv.put("status", alert.getStatus());
+        cv.put("record_time", alert.getRecordTime());
+        return db.insert(TABLE_ALERT_RECORDS, null, cv);
+    }
+
+    /** 获取预警记录列表，支持筛选 */
+    public List<AlertRecord> getAlertRecords(int greenhouseId, String sensorType, int level, int limit) {
+        List<AlertRecord> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder("SELECT * FROM " + TABLE_ALERT_RECORDS + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) {
+            sql.append(" AND greenhouse_id=?");
+            args.add(String.valueOf(greenhouseId));
+        }
+        if (sensorType != null && !sensorType.isEmpty()) {
+            sql.append(" AND sensor_type=?");
+            args.add(sensorType);
+        }
+        if (level > 0) {
+            sql.append(" AND level=?");
+            args.add(String.valueOf(level));
+        }
+        sql.append(" ORDER BY record_time DESC LIMIT ?");
+        args.add(String.valueOf(limit));
+        Cursor cursor = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        while (cursor.moveToNext()) {
+            list.add(cursorToAlertRecord(cursor));
+        }
+        cursor.close();
+        return list;
+    }
+
+    private AlertRecord cursorToAlertRecord(Cursor c) {
+        AlertRecord a = new AlertRecord();
+        a.setId(c.getInt(c.getColumnIndexOrThrow("id")));
+        a.setGreenhouseId(c.getInt(c.getColumnIndexOrThrow("greenhouse_id")));
+        a.setSensorType(c.getString(c.getColumnIndexOrThrow("sensor_type")));
+        a.setSensorName(c.getString(c.getColumnIndexOrThrow("sensor_name")));
+        a.setValue(c.getFloat(c.getColumnIndexOrThrow("value")));
+        a.setThresholdMin(c.getFloat(c.getColumnIndexOrThrow("threshold_min")));
+        a.setThresholdMax(c.getFloat(c.getColumnIndexOrThrow("threshold_max")));
+        a.setLevel(c.getInt(c.getColumnIndexOrThrow("level")));
+        a.setLevelName(c.getString(c.getColumnIndexOrThrow("level_name")));
+        a.setStatus(c.getInt(c.getColumnIndexOrThrow("status")));
+        a.setRecordTime(c.getString(c.getColumnIndexOrThrow("record_time")));
+        int hIdx = c.getColumnIndex("handle_time");
+        a.setHandleTime(c.isNull(hIdx) ? null : c.getString(hIdx));
+        int hdIdx = c.getColumnIndex("handler");
+        a.setHandler(c.isNull(hdIdx) ? null : c.getString(hdIdx));
+        return a;
+    }
+
+    /** 标记预警为已处理 */
+    public void markAlertHandled(int alertId, String handler) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("status", 1);
+        cv.put("handler", handler);
+        cv.put("handle_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        db.update(TABLE_ALERT_RECORDS, cv, "id=?", new String[]{String.valueOf(alertId)});
+    }
+
+    /** 统计预警数量 */
+    public long countAlertRecords(int greenhouseId, int status) {
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM " + TABLE_ALERT_RECORDS + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) {
+            sql.append(" AND greenhouse_id=?");
+            args.add(String.valueOf(greenhouseId));
+        }
+        if (status >= 0) {
+            sql.append(" AND status=?");
+            args.add(String.valueOf(status));
+        }
+        Cursor cursor = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        long count = 0;
+        if (cursor.moveToFirst()) count = cursor.getLong(0);
+        cursor.close();
+        return count;
+    }
+
+    // ==================== 门锁/人体感应记录操作 ====================
+
+    /** 保存门锁/人体感应记录 */
+    public long saveAccessLog(AccessLog log) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", log.getGreenhouseId());
+        cv.put("event_type", log.getEventType());
+        cv.put("event_name", log.getEventName());
+        cv.put("operator", log.getOperator());
+        cv.put("record_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        cv.put("remarks", log.getRemarks());
+        return db.insert(TABLE_ACCESS_LOGS, null, cv);
+    }
+
+    /** 获取门锁/人体感应记录 */
+    public List<AccessLog> getAccessLogs(int greenhouseId, int limit) {
+        List<AccessLog> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder(
+                "SELECT * FROM " + TABLE_ACCESS_LOGS + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) {
+            sql.append(" AND greenhouse_id=?");
+            args.add(String.valueOf(greenhouseId));
+        }
+        sql.append(" ORDER BY record_time DESC LIMIT ?");
+        args.add(String.valueOf(limit));
+        Cursor cursor = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        while (cursor.moveToNext()) {
+            AccessLog log = new AccessLog();
+            log.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+            log.setGreenhouseId(cursor.getInt(cursor.getColumnIndexOrThrow("greenhouse_id")));
+            log.setEventType(cursor.getString(cursor.getColumnIndexOrThrow("event_type")));
+            log.setEventName(cursor.getString(cursor.getColumnIndexOrThrow("event_name")));
+            log.setOperator(cursor.getString(cursor.getColumnIndexOrThrow("operator")));
+            log.setRecordTime(cursor.getString(cursor.getColumnIndexOrThrow("record_time")));
+            int rIdx = cursor.getColumnIndex("remarks");
+            log.setRemarks(cursor.isNull(rIdx) ? "" : cursor.getString(rIdx));
+            list.add(log);
+        }
+        cursor.close();
+        return list;
     }
 }
