@@ -1,3 +1,26 @@
 <resources>
-    <string name="app_name">vvGreenHouse</string>
+    <string name="app_name">智能花卉大棚</string>
+    <string name="login">登录</string>
+    <string name="username_hint">请输入用户名</string>
+    <string name="password_hint">请输入密码</string>
+    <string name="remember_password">记住密码</string>
+    <string name="select_role">请选择角色</string>
+    <string name="menu_env">环境监测</string>
+    <string name="menu_control">智能控制</string>
+    <string name="menu_mgmt">日常管理</string>
+    <string name="menu_security">安防预警</string>
+    <string name="menu_settings">系统设置</string>
+    <string name="welcome">欢迎使用智能花卉大棚种植系统</string>
+
+    <string-array name="role_options">
+        <item>boss (老板)</item>
+        <item>admin (管理员)</item>
+        <item>gardener (园艺师)</item>
+    </string-array>
+
+    <string-array name="role_values">
+        <item>boss</item>
+        <item>admin</item>
+        <item>gardener</item>
+    </string-array>
 </resources>
