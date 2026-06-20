@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView android:id="@+id/tv_form_title"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="添加记录" android:textColor="@color/primary"
+            android:textSize="18sp" android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 大棚选择 -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="大棚" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_gh"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 类型/子类型 -->
+        <TextView android:id="@+id/tv_label_type" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="类型"
+            android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_type"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 操作人 -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="操作人" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_operator"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" android:text="admin" />
+
+        <!-- 操作时间 -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="操作时间" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_time"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:focusable="false" android:clickable="true"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 水肥专用字段容器 -->
+        <LinearLayout android:id="@+id/layout_water_fert_fields"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:visibility="gone">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="肥料/药剂" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <EditText android:id="@+id/et_fertilizer_name"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true" android:textSize="14sp"
+                android:background="@drawable/spinner_bg" android:padding="10dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="用量" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <EditText android:id="@+id/et_fertilizer_amount"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true" android:textSize="14sp"
+                android:background="@drawable/spinner_bg" android:padding="10dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="灌溉量" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <EditText android:id="@+id/et_irrigation"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true" android:textSize="14sp"
+                android:background="@drawable/spinner_bg" android:padding="10dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="作业时长(分)" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <EditText android:id="@+id/et_duration"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true" android:textSize="14sp" android:inputType="number"
+                android:background="@drawable/spinner_bg" android:padding="10dp"
+                android:layout_marginBottom="8dp" />
+        </LinearLayout>
+
+        <!-- 运维专用字段容器 -->
+        <LinearLayout android:id="@+id/layout_maintenance_fields"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:visibility="gone">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="设备名称" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <EditText android:id="@+id/et_device_name"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true" android:textSize="14sp"
+                android:background="@drawable/spinner_bg" android:padding="10dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="维护类型" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <Spinner android:id="@+id/sp_maintenance_type"
+                android:layout_width="match_parent" android:layout_height="40dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="费用" android:textColor="@color/text_secondary" android:textSize="13sp" />
+            <EditText android:id="@+id/et_cost"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true" android:textSize="14sp" android:inputType="numberDecimal"
+                android:background="@drawable/spinner_bg" android:padding="10dp"
+                android:layout_marginBottom="8dp" />
+        </LinearLayout>
+
+        <!-- 内容描述 -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="内容描述" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_content"
+            android:layout_width="match_parent" android:layout_height="80dp"
+            android:textSize="14sp" android:gravity="top"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 备注 -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="备注" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_remarks"
+            android:layout_width="match_parent" android:layout_height="60dp"
+            android:textSize="14sp" android:gravity="top"
+            android:background="@drawable/spinner_bg" android:padding="10dp" />
+    </LinearLayout>
+</ScrollView>

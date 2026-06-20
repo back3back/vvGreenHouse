@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment getMgmtFragment() {
         if (mgmtFragment == null) {
-            mgmtFragment = PlaceholderFragment.newInstance("日常管理");
+            mgmtFragment = new ManagementFragment();
         }
         return mgmtFragment;
     }

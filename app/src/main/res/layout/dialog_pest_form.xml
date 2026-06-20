@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="添加病虫害记录" android:textColor="@color/primary"
+            android:textSize="18sp" android:textStyle="bold" android:layout_marginBottom="12dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="大棚" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_gh"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="发现日期" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_find_date"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:focusable="false" android:clickable="true"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="病虫害类型" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_pest_type"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="受影响区域" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_affected_area"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="症状描述" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_symptoms"
+            android:layout_width="match_parent" android:layout_height="80dp"
+            android:textSize="14sp" android:gravity="top"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="防治措施" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_measures"
+            android:layout_width="match_parent" android:layout_height="80dp"
+            android:textSize="14sp" android:gravity="top"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="农药名称" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_pesticide_name"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="农药用量" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_pesticide_amount"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="防治效果" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_effect"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="图片路径（暂预留，可填文件路径）" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_photo_path"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="记录人" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_recorder"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp" android:text="admin"
+            android:background="@drawable/spinner_bg" android:padding="10dp" />
+    </LinearLayout>
+</ScrollView>

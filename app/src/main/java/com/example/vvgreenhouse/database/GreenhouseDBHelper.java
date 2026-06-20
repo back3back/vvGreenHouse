@@ -8,6 +8,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.example.vvgreenhouse.model.SensorData;
 import com.example.vvgreenhouse.model.AlertRecord;
 import com.example.vvgreenhouse.model.AccessLog;
+import com.example.vvgreenhouse.model.Personnel;
+import com.example.vvgreenhouse.model.ManagementLog;
+import com.example.vvgreenhouse.model.PestControl;
+import com.example.vvgreenhouse.model.SalesRecord;
 import com.example.vvgreenhouse.model.User;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +27,7 @@ import java.util.List;
 public class GreenhouseDBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "greenhouse.db";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
 
     // 单例
     private static GreenhouseDBHelper instance;
@@ -35,6 +39,12 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
     public static final String TABLE_DEVICE_LOGS = "device_logs";
     public static final String TABLE_ALERT_RECORDS = "alert_records";
     public static final String TABLE_ACCESS_LOGS = "access_logs";
+    public static final String TABLE_PERSONNEL = "personnel";
+    public static final String TABLE_FARMING_LOGS = "farming_logs";
+    public static final String TABLE_WATER_FERT_LOGS = "water_fertilizer_logs";
+    public static final String TABLE_PEST_CONTROL = "pest_control";
+    public static final String TABLE_MAINTENANCE_LOGS = "maintenance_logs";
+    public static final String TABLE_SALES_RECORDS = "sales_records";
 
     private GreenhouseDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -149,6 +159,99 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
                 + "remarks TEXT)");
         db.execSQL("CREATE INDEX idx_access_gh_time ON "
                 + TABLE_ACCESS_LOGS + "(greenhouse_id, record_time)");
+
+        // ===== 人员信息表 =====
+        db.execSQL("CREATE TABLE " + TABLE_PERSONNEL + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "employee_no VARCHAR(20) NOT NULL UNIQUE, "
+                + "name VARCHAR(50) NOT NULL, "
+                + "gender VARCHAR(10), "
+                + "position VARCHAR(50) NOT NULL, "
+                + "phone VARCHAR(20), "
+                + "greenhouse_id INTEGER, "
+                + "status INTEGER NOT NULL DEFAULT 1, "
+                + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+
+        // ===== 农事记录表 =====
+        db.execSQL("CREATE TABLE " + TABLE_FARMING_LOGS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "log_type VARCHAR(50) NOT NULL, "
+                + "operator VARCHAR(50) NOT NULL, "
+                + "operate_time DATETIME NOT NULL, "
+                + "content TEXT, "
+                + "remarks TEXT, "
+                + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+        db.execSQL("CREATE INDEX idx_farm_gh_time ON "
+                + TABLE_FARMING_LOGS + "(greenhouse_id, operate_time)");
+
+        // ===== 水肥管理表 =====
+        db.execSQL("CREATE TABLE " + TABLE_WATER_FERT_LOGS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "log_type VARCHAR(50) NOT NULL, "
+                + "operator VARCHAR(50) NOT NULL, "
+                + "operate_time DATETIME NOT NULL, "
+                + "fertilizer_name VARCHAR(200), "
+                + "fertilizer_amount VARCHAR(100), "
+                + "irrigation_amount VARCHAR(100), "
+                + "duration_min INTEGER DEFAULT 0, "
+                + "content TEXT, "
+                + "remarks TEXT, "
+                + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+        db.execSQL("CREATE INDEX idx_wf_gh_time ON "
+                + TABLE_WATER_FERT_LOGS + "(greenhouse_id, operate_time)");
+
+        // ===== 病虫害防治表 =====
+        db.execSQL("CREATE TABLE " + TABLE_PEST_CONTROL + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "find_date DATE NOT NULL, "
+                + "pest_type VARCHAR(100) NOT NULL, "
+                + "affected_area VARCHAR(200), "
+                + "symptoms TEXT, "
+                + "control_measures TEXT, "
+                + "pesticide_name VARCHAR(200), "
+                + "pesticide_amount VARCHAR(100), "
+                + "control_effect VARCHAR(200), "
+                + "recorder VARCHAR(50) NOT NULL, "
+                + "photo_path VARCHAR(500), "
+                + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+        db.execSQL("CREATE INDEX idx_pest_gh_date ON "
+                + TABLE_PEST_CONTROL + "(greenhouse_id, find_date)");
+
+        // ===== 设备运维表 =====
+        db.execSQL("CREATE TABLE " + TABLE_MAINTENANCE_LOGS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "device_name VARCHAR(100) NOT NULL, "
+                + "maintenance_type VARCHAR(30) NOT NULL, "
+                + "operator VARCHAR(50) NOT NULL, "
+                + "operate_time DATETIME NOT NULL, "
+                + "content TEXT, "
+                + "cost VARCHAR(50), "
+                + "remarks TEXT, "
+                + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+        db.execSQL("CREATE INDEX idx_maint_gh_time ON "
+                + TABLE_MAINTENANCE_LOGS + "(greenhouse_id, operate_time)");
+
+        // ===== 产销台账表 =====
+        db.execSQL("CREATE TABLE " + TABLE_SALES_RECORDS + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "batch_no VARCHAR(50) NOT NULL UNIQUE, "
+                + "greenhouse_id INTEGER NOT NULL, "
+                + "variety VARCHAR(100) NOT NULL, "
+                + "harvest_date DATE NOT NULL, "
+                + "quantity INTEGER NOT NULL, "
+                + "quality_grade VARCHAR(20), "
+                + "sale_channel VARCHAR(100), "
+                + "unit_price DECIMAL(10,2), "
+                + "total_amount DECIMAL(10,2), "
+                + "customer VARCHAR(200), "
+                + "recorder VARCHAR(50) NOT NULL, "
+                + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+        db.execSQL("CREATE INDEX idx_sales_gh_date ON "
+                + TABLE_SALES_RECORDS + "(greenhouse_id, harvest_date)");
     }
 
     @Override
@@ -195,6 +298,95 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
                     + "remarks TEXT)");
             db.execSQL("CREATE INDEX idx_access_gh_time ON "
                     + TABLE_ACCESS_LOGS + "(greenhouse_id, record_time)");
+        }
+        if (oldVersion < 4) {
+            // 人员
+            db.execSQL("CREATE TABLE " + TABLE_PERSONNEL + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "employee_no VARCHAR(20) NOT NULL UNIQUE, "
+                    + "name VARCHAR(50) NOT NULL, "
+                    + "gender VARCHAR(10), "
+                    + "position VARCHAR(50) NOT NULL, "
+                    + "phone VARCHAR(20), "
+                    + "greenhouse_id INTEGER, "
+                    + "status INTEGER NOT NULL DEFAULT 1, "
+                    + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            // 农事
+            db.execSQL("CREATE TABLE " + TABLE_FARMING_LOGS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "log_type VARCHAR(50) NOT NULL, "
+                    + "operator VARCHAR(50) NOT NULL, "
+                    + "operate_time DATETIME NOT NULL, "
+                    + "content TEXT, "
+                    + "remarks TEXT, "
+                    + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE INDEX idx_farm_gh_time ON "
+                    + TABLE_FARMING_LOGS + "(greenhouse_id, operate_time)");
+            // 水肥
+            db.execSQL("CREATE TABLE " + TABLE_WATER_FERT_LOGS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "log_type VARCHAR(50) NOT NULL, "
+                    + "operator VARCHAR(50) NOT NULL, "
+                    + "operate_time DATETIME NOT NULL, "
+                    + "fertilizer_name VARCHAR(200), "
+                    + "fertilizer_amount VARCHAR(100), "
+                    + "irrigation_amount VARCHAR(100), "
+                    + "duration_min INTEGER DEFAULT 0, "
+                    + "content TEXT, "
+                    + "remarks TEXT, "
+                    + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE INDEX idx_wf_gh_time ON "
+                    + TABLE_WATER_FERT_LOGS + "(greenhouse_id, operate_time)");
+            // 病虫害
+            db.execSQL("CREATE TABLE " + TABLE_PEST_CONTROL + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "find_date DATE NOT NULL, "
+                    + "pest_type VARCHAR(100) NOT NULL, "
+                    + "affected_area VARCHAR(200), "
+                    + "symptoms TEXT, "
+                    + "control_measures TEXT, "
+                    + "pesticide_name VARCHAR(200), "
+                    + "pesticide_amount VARCHAR(100), "
+                    + "control_effect VARCHAR(200), "
+                    + "recorder VARCHAR(50) NOT NULL, "
+                    + "photo_path VARCHAR(500), "
+                    + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE INDEX idx_pest_gh_date ON "
+                    + TABLE_PEST_CONTROL + "(greenhouse_id, find_date)");
+            // 运维
+            db.execSQL("CREATE TABLE " + TABLE_MAINTENANCE_LOGS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "device_name VARCHAR(100) NOT NULL, "
+                    + "maintenance_type VARCHAR(30) NOT NULL, "
+                    + "operator VARCHAR(50) NOT NULL, "
+                    + "operate_time DATETIME NOT NULL, "
+                    + "content TEXT, "
+                    + "cost VARCHAR(50), "
+                    + "remarks TEXT, "
+                    + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE INDEX idx_maint_gh_time ON "
+                    + TABLE_MAINTENANCE_LOGS + "(greenhouse_id, operate_time)");
+            // 产销
+            db.execSQL("CREATE TABLE " + TABLE_SALES_RECORDS + " ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "batch_no VARCHAR(50) NOT NULL UNIQUE, "
+                    + "greenhouse_id INTEGER NOT NULL, "
+                    + "variety VARCHAR(100) NOT NULL, "
+                    + "harvest_date DATE NOT NULL, "
+                    + "quantity INTEGER NOT NULL, "
+                    + "quality_grade VARCHAR(20), "
+                    + "sale_channel VARCHAR(100), "
+                    + "unit_price DECIMAL(10,2), "
+                    + "total_amount DECIMAL(10,2), "
+                    + "customer VARCHAR(200), "
+                    + "recorder VARCHAR(50) NOT NULL, "
+                    + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE INDEX idx_sales_gh_date ON "
+                    + TABLE_SALES_RECORDS + "(greenhouse_id, harvest_date)");
         }
     }
 
@@ -508,5 +700,339 @@ public class GreenhouseDBHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return list;
+    }
+
+    // ==================== 人员管理 CRUD ====================
+
+    public long savePersonnel(Personnel p) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("employee_no", p.getEmployeeNo());
+        cv.put("name", p.getName());
+        cv.put("gender", p.getGender());
+        cv.put("position", p.getPosition());
+        cv.put("phone", p.getPhone());
+        cv.put("greenhouse_id", p.getGreenhouseId());
+        cv.put("status", p.getStatus());
+        cv.put("create_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        return db.insert(TABLE_PERSONNEL, null, cv);
+    }
+
+    public void updatePersonnel(Personnel p) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("name", p.getName());
+        cv.put("gender", p.getGender());
+        cv.put("position", p.getPosition());
+        cv.put("phone", p.getPhone());
+        cv.put("greenhouse_id", p.getGreenhouseId());
+        cv.put("status", p.getStatus());
+        db.update(TABLE_PERSONNEL, cv, "id=?", new String[]{String.valueOf(p.getId())});
+    }
+
+    public void deletePersonnel(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_PERSONNEL, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public List<Personnel> getAllPersonnel() {
+        List<Personnel> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT * FROM " + TABLE_PERSONNEL + " ORDER BY id DESC", null);
+        while (c.moveToNext()) {
+            Personnel p = new Personnel();
+            p.setId(c.getInt(c.getColumnIndexOrThrow("id")));
+            p.setEmployeeNo(c.getString(c.getColumnIndexOrThrow("employee_no")));
+            p.setName(c.getString(c.getColumnIndexOrThrow("name")));
+            p.setGender(c.getString(c.getColumnIndexOrThrow("gender")));
+            p.setPosition(c.getString(c.getColumnIndexOrThrow("position")));
+            p.setPhone(c.getString(c.getColumnIndexOrThrow("phone")));
+            p.setGreenhouseId(c.getInt(c.getColumnIndexOrThrow("greenhouse_id")));
+            p.setStatus(c.getInt(c.getColumnIndexOrThrow("status")));
+            p.setCreateTime(c.getString(c.getColumnIndexOrThrow("create_time")));
+            list.add(p);
+        }
+        c.close();
+        return list;
+    }
+
+    // ==================== 农事日志 CRUD ====================
+
+    public long saveFarmingLog(ManagementLog m) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", m.getGreenhouseId());
+        cv.put("log_type", m.getLogType());
+        cv.put("operator", m.getOperator());
+        cv.put("operate_time", m.getOperateTime());
+        cv.put("content", m.getContent());
+        cv.put("remarks", m.getRemarks());
+        cv.put("create_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        return db.insert(TABLE_FARMING_LOGS, null, cv);
+    }
+
+    public void deleteFarmingLog(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_FARMING_LOGS, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public List<ManagementLog> getFarmingLogs(int greenhouseId, int limit) {
+        return getManagementLogs(TABLE_FARMING_LOGS, greenhouseId, limit, false);
+    }
+
+    // ==================== 水肥日志 CRUD ====================
+
+    public long saveWaterFertLog(ManagementLog m) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", m.getGreenhouseId());
+        cv.put("log_type", m.getLogType());
+        cv.put("operator", m.getOperator());
+        cv.put("operate_time", m.getOperateTime());
+        cv.put("fertilizer_name", m.getFertilizerName());
+        cv.put("fertilizer_amount", m.getFertilizerAmount());
+        cv.put("irrigation_amount", m.getIrrigationAmount());
+        cv.put("duration_min", m.getDurationMin());
+        cv.put("content", m.getContent());
+        cv.put("remarks", m.getRemarks());
+        cv.put("create_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        return db.insert(TABLE_WATER_FERT_LOGS, null, cv);
+    }
+
+    public void deleteWaterFertLog(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_WATER_FERT_LOGS, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public List<ManagementLog> getWaterFertLogs(int greenhouseId, int limit) {
+        return getManagementLogsExt(TABLE_WATER_FERT_LOGS, greenhouseId, limit);
+    }
+
+    // ==================== 运维日志 CRUD ====================
+
+    public long saveMaintenanceLog(ManagementLog m) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", m.getGreenhouseId());
+        cv.put("device_name", m.getDeviceName());
+        cv.put("maintenance_type", m.getMaintenanceType());
+        cv.put("operator", m.getOperator());
+        cv.put("operate_time", m.getOperateTime());
+        cv.put("content", m.getContent());
+        cv.put("cost", m.getCost());
+        cv.put("remarks", m.getRemarks());
+        cv.put("create_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        return db.insert(TABLE_MAINTENANCE_LOGS, null, cv);
+    }
+
+    public void deleteMaintenanceLog(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_MAINTENANCE_LOGS, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public List<ManagementLog> getMaintenanceLogs(int greenhouseId, int limit) {
+        List<ManagementLog> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder(
+                "SELECT * FROM " + TABLE_MAINTENANCE_LOGS + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) { sql.append(" AND greenhouse_id=?"); args.add(String.valueOf(greenhouseId)); }
+        sql.append(" ORDER BY operate_time DESC LIMIT ?");
+        args.add(String.valueOf(limit));
+        Cursor c = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        while (c.moveToNext()) {
+            ManagementLog m = new ManagementLog();
+            m.setId(c.getInt(c.getColumnIndexOrThrow("id")));
+            m.setGreenhouseId(c.getInt(c.getColumnIndexOrThrow("greenhouse_id")));
+            m.setDeviceName(c.getString(c.getColumnIndexOrThrow("device_name")));
+            m.setMaintenanceType(c.getString(c.getColumnIndexOrThrow("maintenance_type")));
+            m.setOperator(c.getString(c.getColumnIndexOrThrow("operator")));
+            m.setOperateTime(c.getString(c.getColumnIndexOrThrow("operate_time")));
+            m.setContent(c.getString(c.getColumnIndexOrThrow("content")));
+            int ci = c.getColumnIndex("cost");
+            m.setCost(c.isNull(ci) ? "" : c.getString(ci));
+            int ri = c.getColumnIndex("remarks");
+            m.setRemarks(c.isNull(ri) ? "" : c.getString(ri));
+            m.setCategory("maintenance");
+            list.add(m);
+        }
+        c.close();
+        return list;
+    }
+
+    // ==================== 病虫害 CRUD ====================
+
+    public long savePestControl(PestControl pc) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("greenhouse_id", pc.getGreenhouseId());
+        cv.put("find_date", pc.getFindDate());
+        cv.put("pest_type", pc.getPestType());
+        cv.put("affected_area", pc.getAffectedArea());
+        cv.put("symptoms", pc.getSymptoms());
+        cv.put("control_measures", pc.getControlMeasures());
+        cv.put("pesticide_name", pc.getPesticideName());
+        cv.put("pesticide_amount", pc.getPesticideAmount());
+        cv.put("control_effect", pc.getControlEffect());
+        cv.put("recorder", pc.getRecorder());
+        cv.put("photo_path", pc.getPhotoPath());
+        cv.put("create_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        return db.insert(TABLE_PEST_CONTROL, null, cv);
+    }
+
+    public void deletePestControl(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_PEST_CONTROL, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public List<PestControl> getPestControls(int greenhouseId, int limit) {
+        List<PestControl> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder(
+                "SELECT * FROM " + TABLE_PEST_CONTROL + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) { sql.append(" AND greenhouse_id=?"); args.add(String.valueOf(greenhouseId)); }
+        sql.append(" ORDER BY find_date DESC LIMIT ?");
+        args.add(String.valueOf(limit));
+        Cursor c = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        while (c.moveToNext()) {
+            PestControl pc = new PestControl();
+            pc.setId(c.getInt(c.getColumnIndexOrThrow("id")));
+            pc.setGreenhouseId(c.getInt(c.getColumnIndexOrThrow("greenhouse_id")));
+            pc.setFindDate(c.getString(c.getColumnIndexOrThrow("find_date")));
+            pc.setPestType(c.getString(c.getColumnIndexOrThrow("pest_type")));
+            pc.setAffectedArea(c.getString(c.getColumnIndexOrThrow("affected_area")));
+            pc.setSymptoms(c.getString(c.getColumnIndexOrThrow("symptoms")));
+            pc.setControlMeasures(c.getString(c.getColumnIndexOrThrow("control_measures")));
+            pc.setPesticideName(c.getString(c.getColumnIndexOrThrow("pesticide_name")));
+            pc.setPesticideAmount(c.getString(c.getColumnIndexOrThrow("pesticide_amount")));
+            pc.setControlEffect(c.getString(c.getColumnIndexOrThrow("control_effect")));
+            pc.setRecorder(c.getString(c.getColumnIndexOrThrow("recorder")));
+            int pi = c.getColumnIndex("photo_path");
+            pc.setPhotoPath(c.isNull(pi) ? "" : c.getString(pi));
+            pc.setCreateTime(c.getString(c.getColumnIndexOrThrow("create_time")));
+            list.add(pc);
+        }
+        c.close();
+        return list;
+    }
+
+    // ==================== 产销台账 CRUD ====================
+
+    public long saveSalesRecord(SalesRecord sr) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("batch_no", sr.getBatchNo());
+        cv.put("greenhouse_id", sr.getGreenhouseId());
+        cv.put("variety", sr.getVariety());
+        cv.put("harvest_date", sr.getHarvestDate());
+        cv.put("quantity", sr.getQuantity());
+        cv.put("quality_grade", sr.getQualityGrade());
+        cv.put("sale_channel", sr.getSaleChannel());
+        cv.put("unit_price", sr.getUnitPrice());
+        cv.put("total_amount", sr.getTotalAmount());
+        cv.put("customer", sr.getCustomer());
+        cv.put("recorder", sr.getRecorder());
+        cv.put("create_time", new java.text.SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        return db.insert(TABLE_SALES_RECORDS, null, cv);
+    }
+
+    public void deleteSalesRecord(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_SALES_RECORDS, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public List<SalesRecord> getSalesRecords(int greenhouseId, int limit) {
+        List<SalesRecord> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder(
+                "SELECT * FROM " + TABLE_SALES_RECORDS + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) { sql.append(" AND greenhouse_id=?"); args.add(String.valueOf(greenhouseId)); }
+        sql.append(" ORDER BY harvest_date DESC LIMIT ?");
+        args.add(String.valueOf(limit));
+        Cursor c = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        while (c.moveToNext()) {
+            SalesRecord sr = new SalesRecord();
+            sr.setId(c.getInt(c.getColumnIndexOrThrow("id")));
+            sr.setBatchNo(c.getString(c.getColumnIndexOrThrow("batch_no")));
+            sr.setGreenhouseId(c.getInt(c.getColumnIndexOrThrow("greenhouse_id")));
+            sr.setVariety(c.getString(c.getColumnIndexOrThrow("variety")));
+            sr.setHarvestDate(c.getString(c.getColumnIndexOrThrow("harvest_date")));
+            sr.setQuantity(c.getInt(c.getColumnIndexOrThrow("quantity")));
+            sr.setQualityGrade(c.getString(c.getColumnIndexOrThrow("quality_grade")));
+            sr.setSaleChannel(c.getString(c.getColumnIndexOrThrow("sale_channel")));
+            sr.setUnitPrice(c.getDouble(c.getColumnIndexOrThrow("unit_price")));
+            sr.setTotalAmount(c.getDouble(c.getColumnIndexOrThrow("total_amount")));
+            sr.setCustomer(c.getString(c.getColumnIndexOrThrow("customer")));
+            sr.setRecorder(c.getString(c.getColumnIndexOrThrow("recorder")));
+            sr.setCreateTime(c.getString(c.getColumnIndexOrThrow("create_time")));
+            list.add(sr);
+        }
+        c.close();
+        return list;
+    }
+
+    /** 产销按月统计：返回 {month, total_qty, total_amount} 文本列表 */
+    public List<String> getSalesMonthlyStats() {
+        List<String> stats = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT substr(harvest_date,1,7) AS mon, SUM(quantity), SUM(total_amount) "
+                        + "FROM " + TABLE_SALES_RECORDS
+                        + " GROUP BY mon ORDER BY mon DESC LIMIT 12", null);
+        while (c.moveToNext()) {
+            stats.add(c.getString(0) + " | 总量:" + c.getInt(1)
+                    + " | 金额:¥" + String.format("%.2f", c.getDouble(2)));
+        }
+        c.close();
+        return stats;
+    }
+
+    // ==================== 农事/水肥 通用读取辅助 ====================
+
+    private List<ManagementLog> getManagementLogs(String table, int greenhouseId, int limit, boolean extended) {
+        List<ManagementLog> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        StringBuilder sql = new StringBuilder("SELECT * FROM " + table + " WHERE 1=1");
+        List<String> args = new ArrayList<>();
+        if (greenhouseId > 0) { sql.append(" AND greenhouse_id=?"); args.add(String.valueOf(greenhouseId)); }
+        sql.append(" ORDER BY operate_time DESC LIMIT ?");
+        args.add(String.valueOf(limit));
+        Cursor c = db.rawQuery(sql.toString(), args.toArray(new String[0]));
+        while (c.moveToNext()) {
+            ManagementLog m = new ManagementLog();
+            m.setId(c.getInt(c.getColumnIndexOrThrow("id")));
+            m.setGreenhouseId(c.getInt(c.getColumnIndexOrThrow("greenhouse_id")));
+            m.setLogType(c.getString(c.getColumnIndexOrThrow("log_type")));
+            m.setOperator(c.getString(c.getColumnIndexOrThrow("operator")));
+            m.setOperateTime(c.getString(c.getColumnIndexOrThrow("operate_time")));
+            m.setContent(c.getString(c.getColumnIndexOrThrow("content")));
+            int ri = c.getColumnIndex("remarks");
+            m.setRemarks(c.isNull(ri) ? "" : c.getString(ri));
+            if (extended) {
+                int fi = c.getColumnIndex("fertilizer_name");
+                m.setFertilizerName(c.isNull(fi) ? "" : c.getString(fi));
+                int ai = c.getColumnIndex("fertilizer_amount");
+                m.setFertilizerAmount(c.isNull(ai) ? "" : c.getString(ai));
+                int ii = c.getColumnIndex("irrigation_amount");
+                m.setIrrigationAmount(c.isNull(ii) ? "" : c.getString(ii));
+                int di = c.getColumnIndex("duration_min");
+                m.setDurationMin(c.isNull(di) ? 0 : c.getInt(di));
+            }
+            list.add(m);
+        }
+        c.close();
+        return list;
+    }
+
+    private List<ManagementLog> getManagementLogsExt(String table, int greenhouseId, int limit) {
+        return getManagementLogs(table, greenhouseId, limit, true);
     }
 }

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="添加产销记录" android:textColor="@color/primary"
+            android:textSize="18sp" android:textStyle="bold" android:layout_marginBottom="12dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="批次号" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_batch_no"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="大棚" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_gh"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="品种" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_variety"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp" android:text="玫瑰"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="采收日期" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_harvest_date"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:focusable="false" android:clickable="true"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="数量" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_quantity"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp" android:inputType="number"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="质量等级" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_quality"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="销售渠道" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <Spinner android:id="@+id/sp_channel"
+            android:layout_width="match_parent" android:layout_height="40dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="单价" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_price"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp" android:inputType="numberDecimal"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="总金额（留空=单价×数量）" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_total"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp" android:inputType="numberDecimal"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="客户" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_customer"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp"
+            android:background="@drawable/spinner_bg" android:padding="10dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="记录人" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <EditText android:id="@+id/et_recorder"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:singleLine="true" android:textSize="14sp" android:text="admin"
+            android:background="@drawable/spinner_bg" android:padding="10dp" />
+    </LinearLayout>
+</ScrollView>
